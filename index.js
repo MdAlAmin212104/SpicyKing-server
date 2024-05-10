@@ -61,8 +61,41 @@ async function run() {
     const result = await courser.toArray();
     res.send(result)
   })
+    
+    
+    
+  app.patch('/update/:id', async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const option = { upsert: true };
+    const updateProduct = req.body;
+    const food = {
+      $set:{
+        name: updateProduct.name,
+        category: updateProduct.category,
+        price: updateProduct.price,
+        quantity: updateProduct.quantity,
+        origin: updateProduct.origin,
+        photo: updateProduct.photo,
+        desc: updateProduct.desc,
+      }
+    }
+    const result = await foodCollection.updateOne(filter, food, option)
+    res.send(result);
 
+  })
 
+    
+    
+  app.delete('/delete/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await foodCollection.deleteOne(query);
+    res.send(result);
+  })
+
+    
+  
   app.get('/images', async (req, res) => {
     const courser = imagesCollection.find();
     const result = await courser.toArray();
