@@ -25,7 +25,8 @@ const client = new MongoClient(uri, {
 async function run() {
       try {
         
-            const foodCollection = client.db("DB_food").collection("food");
+        const foodCollection = client.db("DB_food").collection("food");
+        const imagesCollection = client.db("DB_food").collection('images')
 
             app.post('/food', async (req, res) => {
                   const newProduct = req.body;
@@ -54,8 +55,10 @@ async function run() {
             })
 
 
-      app.get('/food', (req, res) => {
-          
+      app.get('/images', async (req, res) => {
+        const courser = imagesCollection.find();
+        const result = await courser.toArray();
+        res.send(result)
       })
         
 
