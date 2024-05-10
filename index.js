@@ -23,43 +23,51 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
-      try {
-        
-        const foodCollection = client.db("DB_food").collection("food");
-        const imagesCollection = client.db("DB_food").collection('images')
+  try {
+    
+  const foodCollection = client.db("DB_food").collection("food");
+  const imagesCollection = client.db("DB_food").collection('images')
 
-            app.post('/food', async (req, res) => {
-                  const newProduct = req.body;
-                  const result = await foodCollection.insertOne(newProduct);
-                  res.send(result)
-            })
+  app.post('/food', async (req, res) => {
+    const newProduct = req.body;
+    const result = await foodCollection.insertOne(newProduct);
+    res.send(result)
+  })
 
-            app.get('/food', async (req, res) => {
-                  const courser = foodCollection.find();
-                  const result = await courser.toArray();
-                  res.send(result)
-            })
-
-
-            app.get('/food/:id', async (req, res) => {
-                  const id = req.params.id;
-                  const query = { _id: new ObjectId(id) };
-                  const result = await foodCollection.findOne(query);
-                  res.send(result);
-            })
-            app.get('/purchase/:id', async (req, res) => {
-                  const id = req.params.id;
-                  const query = { _id: new ObjectId(id) };
-                  const result = await foodCollection.findOne(query);
-                  res.send(result);
-            })
+  app.get('/food', async (req, res) => {
+    const courser = foodCollection.find();
+    const result = await courser.toArray();
+    res.send(result)
+  })
 
 
-      app.get('/images', async (req, res) => {
-        const courser = imagesCollection.find();
-        const result = await courser.toArray();
-        res.send(result)
-      })
+  app.get('/food/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await foodCollection.findOne(query);
+    res.send(result);
+  })
+  app.get('/purchase/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await foodCollection.findOne(query);
+    res.send(result);
+  })
+    
+  app.get('/sportByEmail/:email', async (req, res) => {
+    const email = req.params.email;
+    const query = {'buyer.email': email};
+    const courser = foodCollection.find(query);
+    const result = await courser.toArray();
+    res.send(result)
+  })
+
+
+  app.get('/images', async (req, res) => {
+    const courser = imagesCollection.find();
+    const result = await courser.toArray();
+    res.send(result)
+  })
         
 
 
