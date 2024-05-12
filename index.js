@@ -26,7 +26,8 @@ async function run() {
   try {
     
   const foodCollection = client.db("DB_food").collection("food");
-  const imagesCollection = client.db("DB_food").collection('images')
+  const imagesCollection = client.db("DB_food").collection('images');
+  const userCollection = client.db("DB_food").collection('user');
 
   app.post('/food', async (req, res) => {
     const newProduct = req.body;
@@ -99,6 +100,14 @@ async function run() {
   app.get('/images', async (req, res) => {
     const courser = imagesCollection.find();
     const result = await courser.toArray();
+    res.send(result)
+  })
+    
+    
+  app.post('/user', async (req, res) => {
+    const newUser = req.body;
+    console.log(newUser);
+    const result = await userCollection.insertOne(newUser);
     res.send(result)
   })
         
