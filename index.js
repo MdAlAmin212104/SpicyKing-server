@@ -28,18 +28,71 @@ async function run() {
   const foodCollection = client.db("DB_food").collection("food");
   const imagesCollection = client.db("DB_food").collection('images');
   const userCollection = client.db("DB_food").collection('user');
+  const purchaseCollection = client.db("DB_food").collection('purchase');
+  
 
   app.post('/food', async (req, res) => {
     const newProduct = req.body;
     const result = await foodCollection.insertOne(newProduct);
     res.send(result)
   })
-
+    
+    
   app.get('/food', async (req, res) => {
     const courser = foodCollection.find();
     const result = await courser.toArray();
     res.send(result)
   })
+
+  app.get('/food/search', async (req, res) => {
+    const search = req.query.search;
+    const query = {
+      name: {$regex : search, $options : 'i'},
+    }
+    const courser = foodCollection.find(query);
+    const result = await courser.toArray();
+    res.send(result)
+  })
+    
+    
+  app.post('/purchase', async (req, res) => {
+    const purchaseProduct = req.body;
+    const quantity = purchaseProduct.quantity;
+    const { name, userEmail, price, origin, date, buyer } = purchaseProduct;
+
+    const result = await purchaseCollection.updateOne(
+      {
+        name : name,
+        userEmail: userEmail,
+        price: price,
+        origin: origin,
+        date: date,
+        buyer: buyer,
+      },
+      { $inc: { quantity: quantity } },
+      { upsert: true }
+    );
+    res.send(result)
+
+  })
+    
+   
+    
+  app.get('/purchaseUserEmail/:email', async (req, res) => {
+    const email = req.params.email;
+    const query = { userEmail : email };
+    const courser = purchaseCollection.find(query);
+    const result = await courser.toArray();
+    res.send(result)
+  })
+  
+  app.delete('/purchase/delete/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await purchaseCollection.deleteOne(query);
+    res.send(result);
+  })
+
 
 
   app.get('/food/:id', async (req, res) => {
