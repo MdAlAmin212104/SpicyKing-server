@@ -1,13 +1,23 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000
 
 //middleware
-app.use(cors())
+app.use(cors({
+    origin: [
+      "http://localhost:5173",
+      "https://spicyking-4c20c.web.app",
+      "https://spicyking-4c20c.firebaseapp.com",
+    ],
+    credentials: true,
+  }))
 app.use(express.json())
+app.use(cookieParser())
 
 
 
@@ -22,6 +32,23 @@ const client = new MongoClient(uri, {
   }
 });
 
+
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "Invalid" })
+  }
+  jwt.verify(token, process.env.TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({message: 'unauthorize Access'})
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
+
+
 async function run() {
   try {
     
@@ -30,6 +57,28 @@ async function run() {
   const userCollection = client.db("DB_food").collection('user');
   const purchaseCollection = client.db("DB_food").collection('purchase');
   
+  app.post('/jwt', async (req, res) => {
+    const user = req.body;
+    const token = jwt.sign(user, process.env.TOKEN, { expiresIn: '7h' });
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      })
+      .send({ success: true });
+  })
+    
+    
+  app.post("/logout", async (req, res) => {
+    
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      maxAge: 0,
+    })
+    .send({ success: true })
+  });
 
   app.post('/food', async (req, res) => {
     const newProduct = req.body;
@@ -53,6 +102,8 @@ async function run() {
     const result = await courser.toArray();
     res.send(result)
   })
+    
+  
     
     
   app.post('/purchase', async (req, res) => {
@@ -78,9 +129,9 @@ async function run() {
     
    
     
-  app.get('/purchaseUserEmail/:email', async (req, res) => {
+  app.get('/purchaseUserEmail/:email',  async (req, res) => {
     const email = req.params.email;
-    const query = { userEmail : email };
+    const query = { userEmail: email };
     const courser = purchaseCollection.find(query);
     const result = await courser.toArray();
     res.send(result)
@@ -108,7 +159,7 @@ async function run() {
     res.send(result);
   })
     
-  app.get('/sportByEmail/:email', async (req, res) => {
+  app.get('/sportByEmail/:email', verifyToken, async (req, res) => {
     const email = req.params.email;
     const query = {'buyer.email': email};
     const courser = foodCollection.find(query);
@@ -159,7 +210,7 @@ async function run() {
     
   app.post('/user', async (req, res) => {
     const newUser = req.body;
-    console.log(newUser);
+    //console.log(newUser);
     const result = await userCollection.insertOne(newUser);
     res.send(result)
   })
